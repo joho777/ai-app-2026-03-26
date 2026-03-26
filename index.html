@@ -1,0 +1,2217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0a0e17" />
+  <title>Sora Farewell Studio — Prompt-to-Storyboard Sandbox</title>
+  <style>
+    :root{
+      --bg:#0a0e17;
+      --panel: rgba(255,255,255,0.06);
+      --panel2: rgba(255,255,255,0.085);
+      --stroke: rgba(255,255,255,0.12);
+      --text: rgba(255,255,255,0.88);
+      --muted: rgba(255,255,255,0.62);
+      --muted2: rgba(255,255,255,0.46);
+      --good: #25f59a;
+      --warn: #ffd166;
+      --bad: #ff4d6d;
+      --accentA: #7c5cff;
+      --accentB: #33d6ff;
+      --accentC: #ff4fd8;
+      --accentD: #00ffb3;
+      --shadow: 0 16px 40px rgba(0,0,0,0.45);
+      --radius: 18px;
+      --radius2: 14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: var(--sans);
+      background:
+        radial-gradient(1200px 700px at 20% 10%, rgba(124,92,255,0.25), transparent 60%),
+        radial-gradient(900px 600px at 85% 25%, rgba(51,214,255,0.20), transparent 55%),
+        radial-gradient(1000px 800px at 50% 95%, rgba(255,79,216,0.16), transparent 65%),
+        linear-gradient(180deg, #070a12 0%, #0a0e17 40%, #070a12 100%);
+      color: var(--text);
+      overflow-x:hidden;
+    }
+
+    a{color:inherit}
+
+    .topGlow{
+      position:fixed; inset:-40vh -30vw auto -30vw;
+      height:65vh;
+      background: radial-gradient(circle at 35% 50%, rgba(124,92,255,0.28), transparent 60%),
+                  radial-gradient(circle at 70% 40%, rgba(51,214,255,0.18), transparent 55%);
+      filter: blur(30px);
+      pointer-events:none;
+      z-index:-1;
+      opacity:0.9;
+    }
+
+    .container{max-width:1200px; margin:0 auto; padding:22px 18px 80px}
+
+    header{
+      display:flex;
+      gap:14px;
+      align-items:flex-end;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      padding:18px 10px 10px;
+    }
+
+    .brand{
+      display:flex; gap:14px; align-items:center;
+    }
+
+    .logo{
+      width:44px; height:44px; border-radius:14px;
+      background: linear-gradient(135deg, rgba(124,92,255,1), rgba(51,214,255,1));
+      box-shadow: 0 12px 30px rgba(124,92,255,0.25), 0 10px 22px rgba(51,214,255,0.18);
+      position:relative;
+      overflow:hidden;
+    }
+    .logo:before{
+      content:"";
+      position:absolute; inset:-30%;
+      background: conic-gradient(from 190deg, rgba(255,79,216,0.00), rgba(255,79,216,0.55), rgba(0,255,179,0.00));
+      animation: spin 8s linear infinite;
+      opacity:0.8;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    .brand h1{margin:0; font-size: 20px; letter-spacing:0.2px}
+    .brand .sub{margin:4px 0 0; color: var(--muted); font-size: 13px; max-width: 48ch}
+
+    .rightTop{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    }
+
+    .pill{
+      display:flex; gap:8px; align-items:center;
+      padding:8px 10px;
+      border-radius:999px;
+      background: rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.10);
+      color: var(--muted);
+      font-size:12px;
+      backdrop-filter: blur(10px);
+    }
+
+    .dot{width:8px; height:8px; border-radius:999px; background: var(--accentB); box-shadow: 0 0 14px rgba(51,214,255,0.55)}
+
+    .btn{
+      appearance:none; border:none;
+      cursor:pointer;
+      padding:10px 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--text);
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+      box-shadow: 0 10px 26px rgba(0,0,0,0.35);
+    }
+    .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,0.085); border-color: rgba(255,255,255,0.18)}
+    .btn:active{transform: translateY(0px) scale(0.98)}
+
+    .btnPrimary{
+      background: linear-gradient(135deg, rgba(124,92,255,0.95), rgba(51,214,255,0.9));
+      border-color: rgba(255,255,255,0.14);
+      color:#061018;
+      font-weight: 700;
+      box-shadow: 0 18px 40px rgba(124,92,255,0.22), 0 16px 34px rgba(51,214,255,0.14);
+    }
+    .btnPrimary:hover{background: linear-gradient(135deg, rgba(124,92,255,1), rgba(51,214,255,0.95));}
+
+    .grid{
+      display:grid;
+      grid-template-columns: 420px 1fr;
+      gap:16px;
+      padding: 14px 10px;
+    }
+
+    @media (max-width: 980px){
+      .grid{grid-template-columns: 1fr;}
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.04));
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      overflow:hidden;
+      position:relative;
+    }
+
+    .cardHeader{
+      padding:14px 14px 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+
+    .cardHeader h2{margin:0; font-size:14px; letter-spacing:0.25px; color: rgba(255,255,255,0.84)}
+    .cardHeader .meta{font-size:12px; color: var(--muted)}
+
+    .cardBody{padding:14px}
+
+    textarea{
+      width:100%;
+      min-height:120px;
+      resize: vertical;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.35);
+      color: var(--text);
+      outline:none;
+      font-family: var(--sans);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+    }
+
+    .row{display:flex; gap:10px; flex-wrap:wrap}
+    .row > *{flex: 1 1 auto}
+
+    .field{display:flex; flex-direction:column; gap:6px; margin-top:10px}
+    .label{font-size:12px; color: var(--muted)}
+
+    input[type="range"]{width:100%}
+
+    .twoCol{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+
+    @media(max-width:480px){
+      .twoCol{grid-template-columns: 1fr;}
+    }
+
+    .select{
+      width:100%;
+      padding: 10px 10px;
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.28);
+      color: var(--text);
+      outline:none;
+    }
+
+    .help{
+      margin-top:10px;
+      font-size:12px;
+      color: var(--muted2);
+      line-height:1.45;
+    }
+
+    .kpiRow{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
+    .kpi{
+      flex: 1 1 120px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.10);
+    }
+    .kpi .k{font-size:11px; color: var(--muted2)}
+    .kpi .v{margin-top:4px; font-size:14px; font-weight:700}
+
+    .stageWrap{padding:14px}
+
+    .stageTop{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(90deg, rgba(124,92,255,0.10), rgba(51,214,255,0.06));
+    }
+
+    .tabs{display:flex; gap:8px; flex-wrap:wrap}
+    .tab{
+      padding: 8px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.05);
+      cursor:pointer;
+      font-size:12px;
+      color: var(--muted);
+      user-select:none;
+      transition: background .12s ease, transform .12s ease;
+    }
+    .tab:hover{transform: translateY(-1px); background: rgba(255,255,255,0.07)}
+    .tab.active{color: rgba(255,255,255,0.92); background: rgba(124,92,255,0.18); border-color: rgba(124,92,255,0.35)}
+
+    .stage{
+      display:grid;
+      grid-template-columns: 1.35fr 0.65fr;
+      gap:14px;
+      padding: 14px;
+    }
+
+    @media(max-width: 980px){
+      .stage{grid-template-columns: 1fr;}
+    }
+
+    .board{
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.25);
+      overflow:hidden;
+      min-height: 520px;
+      position:relative;
+    }
+
+    canvas{display:block; width:100%; height:100%}
+
+    .side{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .panel{
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.20);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+      overflow:hidden;
+    }
+
+    .panel .ph{
+      padding: 12px 12px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .panel .ph b{font-size:13px; letter-spacing:0.2px}
+    .panel .ph span{font-size:12px; color: var(--muted)}
+
+    .panel .pb{padding: 12px}
+
+    .chipRow{display:flex; gap:8px; flex-wrap:wrap}
+    .chip{
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 12px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      cursor:pointer;
+      user-select:none;
+      color: rgba(255,255,255,0.76);
+    }
+    .chip:hover{background: rgba(255,255,255,0.08)}
+    .chip.on{background: rgba(0,255,179,0.14); border-color: rgba(0,255,179,0.26); color: rgba(255,255,255,0.92)}
+
+    .timeline{
+      display:flex; flex-direction:column; gap:10px;
+    }
+
+    .shot{
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+      overflow:hidden;
+    }
+
+    .shotTop{padding: 10px 10px 8px; display:flex; justify-content:space-between; align-items:center; gap:10px; border-bottom:1px solid rgba(255,255,255,0.08)}
+    .shotTop .t{font-size:12px; color: rgba(255,255,255,0.86)}
+    .shotTop .s{font-size:12px; color: var(--muted)}
+
+    .shotBody{padding: 10px}
+
+    .shotPrompt{font-size:12px; color: var(--muted); line-height:1.4}
+
+    .miniBtns{display:flex; gap:8px}
+    .miniBtn{padding:7px 9px; font-size:12px; border-radius: 12px; background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.10); cursor:pointer; color: rgba(255,255,255,0.80)}
+    .miniBtn:hover{background: rgba(255,255,255,0.085)}
+
+    .toastArea{position: fixed; right: 16px; bottom: 16px; display:flex; flex-direction:column; gap:10px; z-index: 50}
+    .toast{
+      width:min(360px, calc(100vw - 32px));
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,0.14);
+      background: rgba(12,16,26,0.75);
+      box-shadow: 0 18px 50px rgba(0,0,0,0.55);
+      backdrop-filter: blur(12px);
+      padding: 12px 12px 10px;
+      animation: pop .18s ease;
+    }
+    @keyframes pop{from{transform: translateY(6px); opacity:0} to{transform: translateY(0); opacity:1}}
+    .toast .tt{font-size:12px; color: var(--muted2)}
+    .toast .tb{margin-top:4px; font-size:13px; color: rgba(255,255,255,0.88); line-height:1.4}
+
+    .footer{
+      margin-top:16px;
+      padding: 0 10px;
+      color: var(--muted2);
+      font-size:12px;
+      line-height:1.45;
+    }
+
+    .kbd{font-family:var(--mono); font-size:11px; padding: 2px 6px; border-radius: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: rgba(255,255,255,0.72)}
+
+    /* Small accessibility helpers */
+    .sr{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0}
+
+    /* Subtle animated grain */
+    .grain{
+      pointer-events:none;
+      position:fixed; inset:0;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="260" height="260"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch"/></filter><rect width="260" height="260" filter="url(%23n)" opacity="0.35"/></svg>');
+      mix-blend-mode: overlay;
+      opacity:0.08;
+      z-index:-1;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="topGlow" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Sora Farewell Studio</h1>
+          <div class="sub">A prompt-to-storyboard sandbox for turning video-model ideas into a shareable, shot-by-shot plan. Built for the moment when a tool disappears, but the craft remains.</div>
+        </div>
+      </div>
+
+      <div class="rightTop">
+        <div class="pill" title="Works offline, no accounts">
+          <span class="dot" aria-hidden="true"></span>
+          <span>Local-only demo</span>
+        </div>
+        <button class="btn" id="btnLoadDemo" title="Load a sample concept">Load demo</button>
+        <button class="btn" id="btnExport" title="Export storyboard JSON">Export</button>
+        <button class="btn btnPrimary" id="btnShare" title="Create a shareable link">Share link</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card" aria-label="Prompt composer">
+        <div class="cardHeader">
+          <h2>Composer</h2>
+          <div class="meta">Turn a single prompt into a storyboard plus "director notes".</div>
+        </div>
+        <div class="cardBody">
+          <div class="field">
+            <div class="label">Core prompt</div>
+            <textarea id="prompt" placeholder="Example: A lonely robot walks through a rain-soaked neon market, searching for a signal that reminds it of home."></textarea>
+          </div>
+
+          <div class="twoCol" style="margin-top:10px">
+            <div class="field">
+              <div class="label">Genre</div>
+              <select class="select" id="genre">
+                <option value="sci-fi">Sci-fi</option>
+                <option value="noir">Noir</option>
+                <option value="documentary">Documentary</option>
+                <option value="fantasy">Fantasy</option>
+                <option value="comedy">Comedy</option>
+                <option value="horror">Horror</option>
+                <option value="music-video">Music video</option>
+              </select>
+            </div>
+            <div class="field">
+              <div class="label">Mood</div>
+              <select class="select" id="mood">
+                <option value="melancholy">Melancholy</option>
+                <option value="hopeful">Hopeful</option>
+                <option value="tense">Tense</option>
+                <option value="playful">Playful</option>
+                <option value="eerie">Eerie</option>
+                <option value="triumphant">Triumphant</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="twoCol" style="margin-top:10px">
+            <div class="field">
+              <div class="label">Shot count: <span id="shotsLabel" class="kbd">8</span></div>
+              <input type="range" id="shots" min="3" max="16" value="8" />
+            </div>
+            <div class="field">
+              <div class="label">Pacing (slow to fast): <span id="paceLabel" class="kbd">0.55</span></div>
+              <input type="range" id="pace" min="0" max="100" value="55" />
+            </div>
+          </div>
+
+          <div class="twoCol" style="margin-top:10px">
+            <div class="field">
+              <div class="label">Camera energy: <span id="camLabel" class="kbd">0.45</span></div>
+              <input type="range" id="camera" min="0" max="100" value="45" />
+            </div>
+            <div class="field">
+              <div class="label">Surrealism: <span id="surLabel" class="kbd">0.25</span></div>
+              <input type="range" id="surreal" min="0" max="100" value="25" />
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:12px">
+            <button class="btn btnPrimary" id="btnGenerate">Generate storyboard</button>
+            <button class="btn" id="btnRemix" title="Random remix of style knobs">Remix style</button>
+            <button class="btn" id="btnReset">Reset</button>
+          </div>
+
+          <div class="kpiRow" aria-label="Storyboard KPIs">
+            <div class="kpi">
+              <div class="k">Continuity risk</div>
+              <div class="v" id="kpiContinuity">Low</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Motion complexity</div>
+              <div class="v" id="kpiMotion">Medium</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Edit rhythm</div>
+              <div class="v" id="kpiRhythm">Breathing</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Estimated render cost</div>
+              <div class="v" id="kpiCost">Moderate</div>
+            </div>
+          </div>
+
+          <div class="help">
+            Tip: you can press <span class="kbd">Ctrl</span> + <span class="kbd">Enter</span> to generate. After you have a storyboard, click a shot to edit it, then watch the preview "video" animate.
+          </div>
+        </div>
+      </section>
+
+      <section class="card" aria-label="Storyboard stage">
+        <div class="stageTop">
+          <div>
+            <div style="font-weight:800; letter-spacing:0.2px">Storyboard</div>
+            <div style="margin-top:3px; font-size:12px; color: var(--muted)">A kinetic preview and a timeline you can refine.</div>
+          </div>
+          <div class="tabs" role="tablist" aria-label="Stage tabs">
+            <div class="tab active" data-tab="preview" role="tab" tabindex="0">Preview</div>
+            <div class="tab" data-tab="timeline" role="tab" tabindex="0">Timeline</div>
+            <div class="tab" data-tab="director" role="tab" tabindex="0">Director notes</div>
+          </div>
+        </div>
+
+        <div class="stageWrap">
+          <div class="stage">
+            <div class="board" aria-label="Kinetic preview board">
+              <canvas id="canvas" width="920" height="560"></canvas>
+            </div>
+
+            <div class="side" aria-label="Right-side panels">
+              <div class="panel" id="panelQuick">
+                <div class="ph"><b>Quick tools</b><span>edit, reorder, animate</span></div>
+                <div class="pb">
+                  <div class="row">
+                    <button class="btn" id="btnPlay">Play</button>
+                    <button class="btn" id="btnPause">Pause</button>
+                    <button class="btn" id="btnStep">Step</button>
+                  </div>
+
+                  <div class="field" style="margin-top:12px">
+                    <div class="label">Preview speed: <span id="speedLabel" class="kbd">1.00</span></div>
+                    <input type="range" id="speed" min="50" max="200" value="100" />
+                  </div>
+
+                  <div class="field" style="margin-top:12px">
+                    <div class="label">Selected shot</div>
+                    <select class="select" id="shotSelect"></select>
+                  </div>
+
+                  <div class="row" style="margin-top:10px">
+                    <button class="btn" id="btnMoveUp">Move up</button>
+                    <button class="btn" id="btnMoveDown">Move down</button>
+                  </div>
+
+                  <div class="row" style="margin-top:10px">
+                    <button class="btn" id="btnDuplicate">Duplicate</button>
+                    <button class="btn" id="btnDelete">Delete</button>
+                  </div>
+
+                  <div class="help" style="margin-top:10px">Keyboard: <span class="kbd">Space</span> play/pause, <span class="kbd">J</span>/<span class="kbd">K</span> step, <span class="kbd">Ctrl</span>+<span class="kbd">S</span> share link</div>
+                </div>
+              </div>
+
+              <div class="panel" id="panelStyle">
+                <div class="ph"><b>Style ingredients</b><span>toggle constraints</span></div>
+                <div class="pb">
+                  <div class="chipRow" id="chipRow"></div>
+                  <div class="help" style="margin-top:10px">These flags influence the generated shot language and preview visuals. Try enabling "hard continuity" and "locked hero" to reduce drift.</div>
+                </div>
+              </div>
+
+              <div class="panel" id="panelEdit">
+                <div class="ph"><b>Shot editor</b><span id="editHint">click any shot</span></div>
+                <div class="pb">
+                  <div class="field">
+                    <div class="label">Shot title</div>
+                    <input class="select" id="editTitle" />
+                  </div>
+                  <div class="field">
+                    <div class="label">Shot prompt (what the model sees)</div>
+                    <textarea id="editPrompt" style="min-height:110px"></textarea>
+                  </div>
+                  <div class="twoCol">
+                    <div class="field">
+                      <div class="label">Duration (sec)</div>
+                      <input class="select" id="editDur" type="number" min="1" max="20" step="1" />
+                    </div>
+                    <div class="field">
+                      <div class="label">Camera</div>
+                      <select class="select" id="editCam">
+                        <option value="static">Static</option>
+                        <option value="handheld">Handheld</option>
+                        <option value="dolly">Dolly</option>
+                        <option value="crane">Crane</option>
+                        <option value="drone">Drone</option>
+                        <option value="macro">Macro</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="row" style="margin-top:10px">
+                    <button class="btn btnPrimary" id="btnApply">Apply changes</button>
+                    <button class="btn" id="btnAutoPolish" title="Rewrite the shot prompt for clarity">Auto-polish</button>
+                  </div>
+                  <div class="help" style="margin-top:10px">Auto-polish is deterministic and local: it expands the shot prompt with consistent structure (subject, action, camera, lighting, style, constraints).</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div id="tab_timeline" style="display:none; padding: 0 14px 14px">
+            <div class="timeline" id="timeline"></div>
+          </div>
+
+          <div id="tab_director" style="display:none; padding: 14px">
+            <div class="panel">
+              <div class="ph"><b>Director notes</b><span>the story behind the shots</span></div>
+              <div class="pb">
+                <div id="directorNotes" style="line-height:1.55; color: rgba(255,255,255,0.82); font-size:13px"></div>
+              </div>
+            </div>
+            <div class="help" style="margin-top:12px">
+              This app is inspired by the trend "Goodbye to Sora" (a conversation about a video generation tool fading away). Source: https://twitter.com/soraofficialapp/status/2036532795984715896
+            </div>
+          </div>
+
+        </div>
+      </section>
+    </div>
+
+    <div class="footer">
+      <div><b>What is this?</b> A playful replacement for an AI video tool: instead of generating pixels, it generates structure. You get a storyboard, camera plan, and a kinetic preview you can refine and share.</div>
+      <div style="margin-top:6px"><b>Privacy:</b> everything runs in your browser; exports are local JSON. Share links encode data in the URL hash.</div>
+    </div>
+
+  </div>
+
+  <div class="toastArea" id="toasts" aria-live="polite" aria-relevant="additions"></div>
+
+  <script>
+  (function(){
+    'use strict';
+
+    // -----------------------------
+    // Utilities
+    // -----------------------------
+
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const lerp = (a, b, t) => a + (b-a)*t;
+
+    function fmt(n, digits=2){
+      return (+n).toFixed(digits);
+    }
+
+    function uid(){
+      return Math.random().toString(16).slice(2) + '-' + Math.random().toString(16).slice(2);
+    }
+
+    function hashString(str){
+      // small deterministic hash -> 32-bit
+      let h = 2166136261 >>> 0;
+      for(let i=0;i<str.length;i++){
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return h >>> 0;
+    }
+
+    function mulberry32(seed){
+      return function(){
+        let t = seed += 0x6D2B79F5;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      }
+    }
+
+    function choice(rng, arr){
+      return arr[Math.floor(rng()*arr.length)];
+    }
+
+    function weightedChoice(rng, items){
+      // items: [{w, v}]
+      let sum = items.reduce((a,x)=>a+x.w,0);
+      let r = rng()*sum;
+      for(const it of items){
+        r -= it.w;
+        if(r<=0) return it.v;
+      }
+      return items[items.length-1].v;
+    }
+
+    function normalizeSpaces(s){
+      return (s||'').replace(/\s+/g,' ').trim();
+    }
+
+    function toast(title, body){
+      const area = $('#toasts');
+      const el = document.createElement('div');
+      el.className = 'toast';
+      el.innerHTML = `<div class="tt">${escapeHtml(title)}</div><div class="tb">${escapeHtml(body)}</div>`;
+      area.appendChild(el);
+      setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateY(6px)'; }, 3800);
+      setTimeout(()=>{ el.remove(); }, 4300);
+    }
+
+    function escapeHtml(s){
+      return (s+'').replace(/[&<>"']/g, c=>({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      }[c]));
+    }
+
+    async function copyToClipboard(text){
+      try{
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch(e){
+        // fallback
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand('copy');
+        ta.remove();
+        return ok;
+      }
+    }
+
+    function download(filename, text){
+      const blob = new Blob([text], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      setTimeout(()=>URL.revokeObjectURL(url), 800);
+    }
+
+    // -----------------------------
+    // App State
+    // -----------------------------
+
+    const state = {
+      trendTitle: 'Goodbye to Sora',
+      trendSource: 'https://twitter.com/soraofficialapp/status/2036532795984715896',
+      prompt: '',
+      genre: 'sci-fi',
+      mood: 'melancholy',
+      shots: 8,
+      pace: 0.55,
+      camera: 0.45,
+      surreal: 0.25,
+      flags: {
+        hardContinuity: false,
+        lockedHero: false,
+        practicalLighting: true,
+        textless: true,
+        cinematicLens: true,
+        slowPushes: false,
+        matchCuts: true,
+        oneLocation: false,
+        diegeticSound: true,
+        colorScript: true,
+        physicsCoherent: true,
+      },
+      storyboard: null,
+      selectedShot: 0,
+      playing: false,
+      t: 0,
+      speed: 1.0,
+      tab: 'preview',
+    };
+
+    const FLAG_DEFS = [
+      {key:'hardContinuity', label:'hard continuity', hint:'Minimize identity drift and object swaps.'},
+      {key:'lockedHero', label:'locked hero', hint:'Keep the same main subject across shots.'},
+      {key:'oneLocation', label:'one location', hint:'Constrain to a single consistent environment.'},
+      {key:'matchCuts', label:'match cuts', hint:'Prefer cuts that align motion/shape.'},
+      {key:'slowPushes', label:'slow pushes', hint:'Favor gentle dolly pushes.'},
+      {key:'cinematicLens', label:'cinematic lens', hint:'Use filmic lens language (35mm, anamorphic).'},
+      {key:'practicalLighting', label:'practical lighting', hint:'Use motivated, believable light sources.'},
+      {key:'diegeticSound', label:'diegetic sound', hint:'Describe sound that exists in scene.'},
+      {key:'textless', label:'no text', hint:'Avoid subtitles, UI overlays, and visible text.'},
+      {key:'colorScript', label:'color script', hint:'Deliberate color progression across shots.'},
+      {key:'physicsCoherent', label:'physics coherent', hint:'Avoid impossible interactions.'},
+    ];
+
+    // -----------------------------
+    // Generator (local deterministic)
+    // -----------------------------
+
+    const GEN = {
+      genres: {
+        'sci-fi': {
+          motifs:['neon rain','orbital debris','holographic signage','rusted chrome','synthetic petals','antenna forests','low gravity dust'],
+          places:['neon market','abandoned transit hub','ship graveyard','data cathedral','night shoreline','arcade alley','server orchard'],
+          props:['memory chip','handheld receiver','glowing filament','paper map','drone swarm','polymer cloak','glass lens'],
+        },
+        'noir': {
+          motifs:['cigarette haze','hard shadows','wet asphalt','streetlamp halos','venetian blinds','flickering marquee'],
+          places:['back alley','hotel corridor','late diner','quiet pier','newsroom','interrogation room','rooftop'],
+          props:['matchbook','polaroid','briefcase','wire recorder','blood-stained note','pocket watch'],
+        },
+        'documentary': {
+          motifs:['handheld realism','ambient chatter','natural light','archival cuts','micro-details','quiet observation'],
+          places:['workshop','training room','farm road','city street','studio set','factory floor','library'],
+          props:['notebook','microphone','clipboard','toolkit','printed photo','measuring tape'],
+        },
+        'fantasy': {
+          motifs:['glowing runes','soft fog','ancient stone','floating lanterns','mythic beasts','moonlit water'],
+          places:['enchanted grove','ruined temple','cliff path','hidden tavern','crystal cave','windy bridge'],
+          props:['amulet','map scroll','wooden flute','silver dagger','wax seal','feather cloak'],
+        },
+        'comedy': {
+          motifs:['awkward pauses','overly dramatic zoom','deadpan reactions','physical gags','whip pans','tiny disasters'],
+          places:['office kitchen','subway car','laundromat','elevator','wedding reception','open mic stage'],
+          props:['banana peel','foam finger','broken umbrella','giant mug','mysterious button','confetti cannon'],
+        },
+        'horror': {
+          motifs:['liminal hallways','distant whispers','sickly fluorescents','unseen presence','strobing light','wet footsteps'],
+          places:['basement','motel','forest edge','hospital wing','tunnel','attic'],
+          props:['old tape','rusty key','flashlight','mirror shard','burnt photo','music box'],
+        },
+        'music-video': {
+          motifs:['hyper color','rhythmic cuts','choreo silhouettes','lens flares','set changes','stylized smoke'],
+          places:['soundstage','rooftop set','warehouse','desert road','club','mirror room'],
+          props:['mic stand','sequined jacket','spotlight','vinyl record','laser grid','drumstick'],
+        },
+      },
+
+      moods: {
+        melancholy:{palette:['indigo','cyan','magenta'], tempoBias:-0.12, adjectives:['lonely','soft','fading','quiet','aching'], lighting:['neon reflections','cold moonlight','window glow','distant signage']},
+        hopeful:{palette:['cyan','mint','lavender'], tempoBias:-0.02, adjectives:['warm','rising','gentle','clear','bright'], lighting:['golden edge light','morning haze','soft bloom','sun shafts']},
+        tense:{palette:['crimson','amber','cyan'], tempoBias:0.10, adjectives:['urgent','tight','compressed','watchful','shaking'], lighting:['hard top light','police strobes','flicker','narrow beams']},
+        playful:{palette:['magenta','mint','amber'], tempoBias:0.14, adjectives:['bouncy','absurd','snappy','silly','sparkly'], lighting:['softbox pop','color gels','overexposed highlights','cartoonish rim']},
+        eerie:{palette:['green','violet','cyan'], tempoBias:0.06, adjectives:['uncanny','hollow','foggy','wrong','silent'], lighting:['sickly fluorescents','candle jitter','underlight','deep shadows']},
+        triumphant:{palette:['amber','cyan','violet'], tempoBias:0.18, adjectives:['bold','sweeping','heroic','clean','towering'], lighting:['stadium beams','sunburst','high contrast rim','glittering highlights']},
+      },
+
+      cameras:['static','handheld','dolly','crane','drone','macro'],
+
+      beatTemplates:[
+        {name:'establish', w: 2.4, f:(ctx)=>`Establish the ${ctx.place}: ${ctx.motif}, ${ctx.light}.`},
+        {name:'detail', w: 2.2, f:(ctx)=>`Close detail of ${ctx.prop} as it reflects ${ctx.motif}.`},
+        {name:'action', w: 2.5, f:(ctx)=>`The hero ${ctx.action} through the ${ctx.place}, chased by ${ctx.chase}.`},
+        {name:'reveal', w: 2.1, f:(ctx)=>`A reveal: ${ctx.reveal}, framed against ${ctx.motif}.`},
+        {name:'turn', w: 1.9, f:(ctx)=>`A turn in the story: ${ctx.turn}.`},
+        {name:'breath', w: 1.7, f:(ctx)=>`A quiet breath: ${ctx.breath}.`},
+        {name:'climax', w: 1.8, f:(ctx)=>`A small climax: ${ctx.climax}.`},
+        {name:'resolve', w: 2.0, f:(ctx)=>`Resolution: ${ctx.resolve}.`},
+      ],
+
+      makeStoryboard(spec){
+        const seed = hashString(JSON.stringify(spec));
+        const rng = mulberry32(seed);
+        const g = GEN.genres[spec.genre] || GEN.genres['sci-fi'];
+        const m = GEN.moods[spec.mood] || GEN.moods.melancholy;
+
+        const motif = choice(rng, g.motifs);
+        const place = choice(rng, g.places);
+        const prop = choice(rng, g.props);
+
+        const corePrompt = normalizeSpaces(spec.prompt || 'A fleeting memory of a tool that once turned words into moving light.');
+
+        const hero = inferHero(corePrompt, rng);
+
+        const ctxBase = {
+          motif,
+          place,
+          prop,
+          light: choice(rng, m.lighting),
+          action: choice(rng, [
+            'moves slowly','runs','hesitates','reaches out','keeps walking','stops and listens','turns back'
+          ]),
+          chase: choice(rng, [
+            'a glitching shadow','a swarm of paper drones','echoes of footsteps','a scanning spotlight','a chorus of distant radios'
+          ]),
+          reveal: choice(rng, [
+            'a hidden door hums open','a face appears in reflection','a signal pulse maps the room','a memory replay flickers in midair'
+          ]),
+          turn: choice(rng, [
+            'the path loops back','the hero realizes the signal is inside','the environment changes color','an ally is revealed'
+          ]),
+          breath: choice(rng, [
+            'rain slows to mist','lights dim then bloom','the hero closes their eyes','wind carries a familiar melody'
+          ]),
+          climax: choice(rng, [
+            'a burst of light rewrites the scene','the hero leaps a gap','the signal peaks then breaks','the hero chooses to let go'
+          ]),
+          resolve: choice(rng, [
+            'the world settles into calm','the hero steps into daylight','the signal becomes a guide','the last frame holds on a small smile'
+          ]),
+        };
+
+        // knobs influence
+        const shotCount = clamp(spec.shots|0, 3, 16);
+        const pace = clamp(spec.pace, 0, 1);
+        const camEnergy = clamp(spec.camera, 0, 1);
+        const surreal = clamp(spec.surreal, 0, 1);
+
+        const durationBase = lerp(6.5, 2.4, pace + m.tempoBias);
+        const durationJitter = lerp(2.0, 0.7, pace);
+
+        const continuityTight = !!spec.flags.hardContinuity || !!spec.flags.lockedHero || !!spec.flags.oneLocation;
+
+        // Build color script if enabled
+        const palette = m.palette;
+        const colorScript = [];
+        for(let i=0;i<shotCount;i++){
+          const t = (shotCount<=1)?0:i/(shotCount-1);
+          const a = palette[0], b = palette[1], c = palette[2];
+          const color = (t<0.5) ? blendName(a,b, t*2) : blendName(b,c, (t-0.5)*2);
+          colorScript.push(color);
+        }
+
+        const shots = [];
+        let lastBeat = null;
+        for(let i=0;i<shotCount;i++){
+          const ctx = {...ctxBase};
+          ctx.place = spec.flags.oneLocation ? place : maybeMutatePlace(place, g.places, rng, surreal);
+          ctx.motif = maybeMutateMotif(motif, g.motifs, rng, surreal);
+
+          const beat = pickBeat(rng, lastBeat, i, shotCount, pace);
+          lastBeat = beat;
+
+          const cam = pickCamera(rng, camEnergy, spec.flags.slowPushes);
+          const dur = clamp(Math.round((durationBase + (rng()-0.5)*durationJitter) * 2)/2, 1, 20);
+
+          const title = titleForBeat(beat, hero, i);
+          const prompt = buildShotPrompt({
+            corePrompt,
+            hero,
+            beat,
+            ctx,
+            cam,
+            dur,
+            mood: spec.mood,
+            genre: spec.genre,
+            surreal,
+            flags: spec.flags,
+            color: spec.flags.colorScript ? colorScript[i] : null,
+            continuityTight,
+            rng,
+          });
+
+          const score = {
+            continuityRisk: scoreContinuityRisk(prompt, spec.flags, surreal),
+            motionComplexity: scoreMotion(cam, beat, camEnergy, surreal),
+          };
+
+          shots.push({
+            id: uid(),
+            idx: i,
+            title,
+            cam,
+            dur,
+            beat,
+            color: spec.flags.colorScript ? colorScript[i] : null,
+            prompt,
+            score,
+          });
+        }
+
+        const director = makeDirectorNotes({corePrompt, hero, spec, motif, place, prop, shots, rng});
+
+        return {
+          version: 1,
+          createdAt: new Date().toISOString(),
+          seed,
+          spec: {...spec},
+          hero,
+          motif,
+          place,
+          prop,
+          shots,
+          director,
+        };
+      }
+    };
+
+    function inferHero(corePrompt, rng){
+      const p = corePrompt.toLowerCase();
+      const candidates = [];
+      if(p.includes('robot')) candidates.push('a lonely robot');
+      if(p.includes('girl')) candidates.push('a young girl');
+      if(p.includes('detective')) candidates.push('a tired detective');
+      if(p.includes('cat')) candidates.push('a curious cat');
+      if(p.includes('astronaut')) candidates.push('an astronaut');
+      if(p.includes('bird')) candidates.push('a small bird');
+      if(p.includes('dancer')) candidates.push('a dancer');
+      if(p.includes('wizard')) candidates.push('a wandering wizard');
+      if(p.includes('driver')) candidates.push('a rideshare driver');
+      if(candidates.length) return candidates[0];
+      return choice(rng, ['a lone traveler','a quiet filmmaker','an anxious messenger','a curious archivist','a drifting musician']);
+    }
+
+    function maybeMutatePlace(place, places, rng, surreal){
+      if(rng() < surreal*0.35){
+        const alt = choice(rng, places);
+        if(alt !== place) return alt;
+      }
+      return place;
+    }
+
+    function maybeMutateMotif(motif, motifs, rng, surreal){
+      if(rng() < surreal*0.35){
+        const alt = choice(rng, motifs);
+        if(alt !== motif) return alt;
+      }
+      return motif;
+    }
+
+    function pickBeat(rng, lastBeat, i, n, pace){
+      // First shot tends to establish, last tends to resolve.
+      if(i===0) return 'establish';
+      if(i===n-1) return 'resolve';
+      if(i===n-2 && n>4) return rng()<0.6 ? 'climax' : 'resolve';
+
+      const items = GEN.beatTemplates.map(b=>({w:b.w, v:b.name}));
+      // adjust weights with pace: faster -> more action/reveal/turn
+      for(const it of items){
+        if(['action','reveal','turn'].includes(it.v)) it.w *= lerp(0.9, 1.35, pace);
+        if(['breath','detail'].includes(it.v)) it.w *= lerp(1.25, 0.85, pace);
+      }
+
+      // discourage repeats
+      if(lastBeat){
+        const found = items.find(x=>x.v===lastBeat);
+        if(found) found.w *= 0.35;
+      }
+
+      return weightedChoice(rng, items);
+    }
+
+    function pickCamera(rng, camEnergy, slowPushes){
+      if(slowPushes && rng() < 0.55) return 'dolly';
+      const w = [
+        {w: lerp(2.0, 0.6, camEnergy), v:'static'},
+        {w: lerp(0.8, 2.1, camEnergy), v:'handheld'},
+        {w: lerp(1.3, 1.6, camEnergy), v:'dolly'},
+        {w: lerp(1.0, 1.2, camEnergy), v:'crane'},
+        {w: lerp(0.7, 1.4, camEnergy), v:'drone'},
+        {w: lerp(0.9, 0.8, camEnergy), v:'macro'},
+      ];
+      return weightedChoice(rng, w);
+    }
+
+    function titleForBeat(beat, hero, i){
+      const map = {
+        establish: 'Opening frame',
+        detail: 'Small detail',
+        action: 'Forward motion',
+        reveal: 'Revelation',
+        turn: 'The turn',
+        breath: 'Breath',
+        climax: 'Peak',
+        resolve: 'Last frame',
+      };
+      const base = map[beat] || 'Shot';
+      return `${base} ${i+1}`;
+    }
+
+    function buildShotPrompt(opts){
+      const {corePrompt, hero, beat, ctx, cam, dur, mood, genre, surreal, flags, color, continuityTight, rng} = opts;
+
+      const moodAdj = GEN.moods[mood]?.adjectives || ['cinematic'];
+      const adj = choice(rng, moodAdj);
+
+      const lens = flags.cinematicLens ? choice(rng, ['35mm','50mm','anamorphic 2x','24mm','85mm']) : null;
+      const lighting = flags.practicalLighting ? ctx.light : choice(rng, ['dramatic rim light','soft volumetric haze','high-key studio light']);
+      const sound = flags.diegeticSound ? choice(rng, ['distant rain on metal','soft radio static','footsteps in puddles','wind through cables','a low neon hum']) : null;
+
+      const constraints = [];
+      if(flags.textless) constraints.push('no visible text');
+      if(flags.physicsCoherent) constraints.push('coherent physics');
+      if(flags.lockedHero) constraints.push('same hero identity across shots');
+      if(flags.hardContinuity) constraints.push('avoid continuity drift');
+      if(flags.oneLocation) constraints.push('consistent location');
+      if(flags.matchCuts) constraints.push('match cut-friendly motion');
+
+      const beatLine = GEN.beatTemplates.find(x=>x.name===beat)?.f({
+        place: ctx.place,
+        motif: ctx.motif,
+        prop: ctx.prop,
+        light: lighting,
+        action: ctx.action,
+        chase: ctx.chase,
+        reveal: ctx.reveal,
+        turn: ctx.turn,
+        breath: ctx.breath,
+        climax: ctx.climax,
+        resolve: ctx.resolve,
+      }) || `A cinematic moment featuring ${hero}.`;
+
+      const surrealLine = surreal>0.10 ? choice(rng, [
+        `Subtle surreal touch: shadows briefly lag behind motion (very slight).`,
+        `Subtle surreal touch: colors bend near edges, like a memory artifact.`,
+        `Subtle surreal touch: reflections show a second timeline for one beat.`,
+      ]) : null;
+
+      const continuity = continuityTight ? `Continuity anchors: ${hero}, ${ctx.place}, ${ctx.prop}.` : `Continuity anchors: ${hero}.`;
+
+      const colorLine = color ? `Color script: ${color}-leaning grade.` : null;
+
+      const camLine = {
+        static:`Camera: locked-off ${lens?lens+' ':''}shot, minimal shake.`,
+        handheld:`Camera: handheld ${lens?lens+' ':''}with natural micro-jitter.`,
+        dolly:`Camera: slow dolly move ${lens?lens+' ':''}with smooth parallax.`,
+        crane:`Camera: crane rise ${lens?lens+' ':''}revealing depth.`,
+        drone:`Camera: drone glide ${lens?lens+' ':''}with sweeping perspective.`,
+        macro:`Camera: macro ${lens?lens+' ':''}focus pull, shallow depth of field.`,
+      }[cam] || `Camera: cinematic framing.`;
+
+      const durLine = `Duration: ${dur}s.`;
+
+      const styleLine = `Style: ${adj}, ${genre}, ${mood}.`;
+
+      const soundLine = sound ? `Diegetic sound: ${sound}.` : null;
+
+      const constraintLine = constraints.length ? `Constraints: ${constraints.join(', ')}.` : null;
+
+      const base = [
+        `Core: ${corePrompt}`,
+        `Subject: ${hero}.`,
+        beatLine,
+        camLine,
+        `Lighting: ${lighting}.`,
+        colorLine,
+        soundLine,
+        surrealLine,
+        continuity,
+        constraintLine,
+        durLine,
+      ].filter(Boolean).join('\n');
+
+      return base;
+    }
+
+    function blendName(a,b,t){
+      // purely textual blend for fun
+      if(t<0.34) return a;
+      if(t<0.67) return b;
+      return `${a} to ${b}`;
+    }
+
+    function scoreContinuityRisk(prompt, flags, surreal){
+      let risk = 0.25 + surreal*0.55;
+      if(flags.hardContinuity) risk -= 0.18;
+      if(flags.lockedHero) risk -= 0.12;
+      if(flags.oneLocation) risk -= 0.10;
+      if(flags.matchCuts) risk -= 0.05;
+      if(prompt.toLowerCase().includes('reflection')) risk += 0.05;
+      return clamp(risk, 0, 1);
+    }
+
+    function scoreMotion(cam, beat, camEnergy, surreal){
+      let m = 0.22;
+      if(['handheld','drone','crane'].includes(cam)) m += 0.25;
+      if(cam==='dolly') m += 0.18;
+      if(beat==='action' || beat==='climax') m += 0.22;
+      if(beat==='breath' || beat==='detail') m -= 0.08;
+      m += camEnergy*0.18 + surreal*0.10;
+      return clamp(m, 0, 1);
+    }
+
+    function makeDirectorNotes({corePrompt, hero, spec, motif, place, prop, shots, rng}){
+      const m = GEN.moods[spec.mood];
+      const arc = [
+        `This film begins with a simple idea: ${corePrompt}`,
+        `We follow ${hero} through the ${place}, letting ${motif} become the emotional texture rather than just decoration.`,
+        `Because tools come and go, the point is craft: define the hero, define the space, then cut with intent.`,
+        `The prop (${prop}) is a continuity anchor: it appears early, returns mid-way, then resolves in the final frame.`,
+        `Keep prompts concrete. Avoid asking for "magic"; ask for camera, light, action, and constraints.`,
+        `Mood direction: ${spec.mood}. The palette leans ${m.palette.join(' / ')}.`,
+      ];
+
+      if(spec.flags.hardContinuity){
+        arc.push(`Continuity discipline: lock identity, clothing, and key objects. Resist spontaneous costume swaps.`);
+      }
+      if(spec.flags.textless){
+        arc.push(`No-text rule: avoid UI overlays, captions, signage, and subtitles.`);
+      }
+      if(spec.flags.matchCuts){
+        arc.push(`Editing: favor match cuts so motion in one shot motivates the next. This reduces perceived drift.`);
+      }
+
+      arc.push(`Runtime plan: ${shots.reduce((a,s)=>a+s.dur,0).toFixed(1)} seconds across ${shots.length} shots.`);
+
+      arc.push(`If you were using a video model: render each shot independently, then assemble, then iterate by swapping only one shot at a time.`);
+
+      return arc.join('<br/><br/>');
+    }
+
+    // -----------------------------
+    // Visual Preview Renderer
+    // -----------------------------
+
+    const canvas = $('#canvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvasToDisplaySize(){
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      const w = Math.floor(rect.width * dpr);
+      const h = Math.floor(rect.height * dpr);
+      if(canvas.width !== w || canvas.height !== h){
+        canvas.width = w;
+        canvas.height = h;
+        return true;
+      }
+      return false;
+    }
+
+    function render(){
+      resizeCanvasToDisplaySize();
+
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0,0,W,H);
+
+      // background
+      const g = ctx.createLinearGradient(0,0,W,H);
+      g.addColorStop(0, 'rgba(124,92,255,0.25)');
+      g.addColorStop(0.5, 'rgba(51,214,255,0.16)');
+      g.addColorStop(1, 'rgba(255,79,216,0.14)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,W,H);
+
+      // vignette
+      const vg = ctx.createRadialGradient(W*0.5, H*0.55, 0, W*0.5, H*0.55, Math.max(W,H)*0.65);
+      vg.addColorStop(0, 'rgba(0,0,0,0.00)');
+      vg.addColorStop(1, 'rgba(0,0,0,0.55)');
+      ctx.fillStyle = vg;
+      ctx.fillRect(0,0,W,H);
+
+      if(!state.storyboard){
+        drawEmpty(W,H);
+        return;
+      }
+
+      const shots = state.storyboard.shots;
+      const idx = clamp(state.selectedShot|0, 0, shots.length-1);
+      const shot = shots[idx];
+
+      // compute normalized time within selected shot
+      const dur = Math.max(0.1, shot.dur);
+      const time = (state.t % dur) / dur;
+
+      drawFrame({W,H, shot, idx, time, storyboard: state.storyboard});
+    }
+
+    function drawEmpty(W,H){
+      const pad = Math.min(W,H)*0.06;
+      roundedRect(pad, pad, W-pad*2, H-pad*2, 28);
+      ctx.fillStyle = 'rgba(0,0,0,0.28)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      const msg = 'Generate a storyboard to see a kinetic preview.';
+      ctx.fillStyle = 'rgba(255,255,255,0.82)';
+      ctx.font = `${Math.floor(Math.min(W,H)*0.045)}px ${getComputedStyle(document.body).fontFamily}`;
+      ctx.textAlign = 'center';
+      ctx.fillText(msg, W/2, H/2 - 10);
+
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.font = `${Math.floor(Math.min(W,H)*0.028)}px ${getComputedStyle(document.body).fontFamily}`;
+      ctx.fillText('This preview is procedural art: color, motion, and composition react to shot metadata.', W/2, H/2 + 26);
+    }
+
+    function drawFrame({W,H, shot, idx, time, storyboard}){
+      // interpret shot text into simple glyphs & movement
+      const seed = hashString(shot.id + shot.prompt);
+      const rng = mulberry32(seed);
+
+      const cam = shot.cam;
+      const beat = shot.beat;
+      const motion = shot.score.motionComplexity;
+      const contRisk = shot.score.continuityRisk;
+
+      // camera transform
+      const camShake = (cam==='handheld') ? 1.2 : 0.25;
+      const camMove = (cam==='dolly') ? 0.9 : (cam==='drone' || cam==='crane') ? 1.1 : 0.4;
+
+      const t = easeInOut(time);
+      const shake = (noise1D(rng, state.t*1.7) - 0.5) * camShake * 10 * motion;
+      const shake2 = (noise1D(rng, state.t*1.1 + 10) - 0.5) * camShake * 10 * motion;
+
+      const panX = (t-0.5) * camMove * 120 * (0.25 + motion);
+      const panY = Math.sin(t*Math.PI) * camMove * -40 * (0.25 + motion);
+      const zoom = 1 + (cam==='dolly' ? 0.08 : cam==='crane' ? 0.05 : cam==='drone' ? 0.06 : 0.03) * Math.sin(t*Math.PI);
+
+      ctx.save();
+      ctx.translate(W/2 + panX + shake, H/2 + panY + shake2);
+      ctx.scale(zoom, zoom);
+      ctx.translate(-W/2, -H/2);
+
+      // stage frame
+      const pad = Math.min(W,H)*0.055;
+      const frameR = 30;
+
+      // backdrop texture
+      const bg = ctx.createLinearGradient(0,0,W,H);
+      const colorA = shot.color ? mapColorNameToRGBA(shot.color, 0.24) : 'rgba(124,92,255,0.20)';
+      const colorB = shot.color ? mapColorNameToRGBA(shot.color, 0.12) : 'rgba(51,214,255,0.12)';
+      bg.addColorStop(0, colorA);
+      bg.addColorStop(1, colorB);
+      ctx.fillStyle = bg;
+      roundedRect(pad, pad, W-pad*2, H-pad*2, frameR);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.10)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // horizon / depth lines
+      const horizon = lerp(H*0.52, H*0.62, contRisk);
+      ctx.globalAlpha = 0.55;
+      ctx.strokeStyle = 'rgba(255,255,255,0.10)';
+      for(let i=0;i<10;i++){
+        const y = lerp(horizon, H-pad*1.2, i/10);
+        ctx.beginPath();
+        ctx.moveTo(pad*1.2, y);
+        ctx.lineTo(W-pad*1.2, y);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+
+      // hero glyph
+      const heroX = lerp(W*0.32, W*0.68, t);
+      const heroY = lerp(horizon-30, horizon-60, Math.sin(t*Math.PI));
+      const heroSize = lerp(34, 48, 0.25 + motion);
+
+      drawHero(heroX, heroY, heroSize, rng, beat, shot, storyboard);
+
+      // prop glyph
+      const propX = lerp(W*0.60, W*0.40, t);
+      const propY = horizon + lerp(30, 70, (1-t));
+      drawProp(propX, propY, 22 + motion*16, rng, shot);
+
+      // motif particles
+      drawMotifParticles({pad, W, H, horizon, rng, t, shot});
+
+      // overlay captions
+      ctx.globalAlpha = 1;
+      drawOverlayText({W,H,pad,shot,idx});
+
+      ctx.restore();
+    }
+
+    function drawOverlayText({W,H,pad,shot,idx}){
+      const boxH = 76;
+      const x = pad;
+      const y = H - pad - boxH;
+      roundedRect(x, y, W - pad*2, boxH, 18);
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.10)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      const title = `${idx+1}. ${shot.title}`;
+      const meta = `${shot.cam} • ${shot.dur}s • ${shot.beat}`;
+
+      ctx.fillStyle = 'rgba(255,255,255,0.90)';
+      ctx.font = `${Math.floor(Math.min(W,H)*0.028)}px ${getComputedStyle(document.body).fontFamily}`;
+      ctx.textAlign = 'left';
+      ctx.fillText(title, x+14, y+28);
+
+      ctx.fillStyle = 'rgba(255,255,255,0.62)';
+      ctx.font = `${Math.floor(Math.min(W,H)*0.022)}px ${getComputedStyle(document.body).fontFamily}`;
+      ctx.fillText(meta, x+14, y+52);
+
+      // progress bar
+      const p = (state.t % Math.max(0.1, shot.dur)) / Math.max(0.1, shot.dur);
+      const bx = x+14, by = y+60, bw = W - pad*2 - 28, bh = 8;
+      roundedRect(bx, by, bw, bh, 999);
+      ctx.fillStyle = 'rgba(255,255,255,0.10)';
+      ctx.fill();
+      roundedRect(bx, by, bw * p, bh, 999);
+      ctx.fillStyle = 'rgba(51,214,255,0.45)';
+      ctx.fill();
+    }
+
+    function drawHero(x,y,size,rng,beat,shot,storyboard){
+      // hero style depends on mood/genre via shot.color and beat.
+      const s = size;
+      const pulse = 1 + 0.08*Math.sin(state.t*2.1);
+
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.scale(pulse,pulse);
+
+      // silhouette
+      const glowA = 'rgba(51,214,255,0.35)';
+      const glowB = 'rgba(255,79,216,0.22)';
+
+      ctx.shadowBlur = 28;
+      ctx.shadowColor = glowA;
+
+      ctx.fillStyle = 'rgba(0,0,0,0.20)';
+      ctx.beginPath();
+      ctx.ellipse(0, s*0.92, s*0.8, s*0.22, 0, 0, Math.PI*2);
+      ctx.fill();
+
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = glowB;
+
+      const bodyW = s*0.42;
+      const bodyH = s*0.78;
+      roundedRect(-bodyW/2, -bodyH, bodyW, bodyH, 999);
+      ctx.fillStyle = 'rgba(255,255,255,0.13)';
+      ctx.fill();
+
+      // head
+      ctx.beginPath();
+      ctx.arc(0, -bodyH - s*0.12, s*0.22, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,255,255,0.16)';
+      ctx.fill();
+
+      // accent core
+      ctx.shadowBlur = 0;
+      const core = ctx.createRadialGradient(0, -bodyH*0.55, 0, 0, -bodyH*0.55, s*0.55);
+      core.addColorStop(0, 'rgba(124,92,255,0.55)');
+      core.addColorStop(1, 'rgba(124,92,255,0.00)');
+      ctx.fillStyle = core;
+      ctx.beginPath();
+      ctx.arc(0, -bodyH*0.55, s*0.62, 0, Math.PI*2);
+      ctx.fill();
+
+      // beat-specific gesture line
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+      ctx.beginPath();
+      const a = Math.sin(state.t*1.7)*0.35;
+      if(beat==='action' || beat==='climax'){
+        ctx.moveTo(-s*0.35, -bodyH*0.25);
+        ctx.lineTo(s*0.65, -bodyH*0.05 + a*s*0.25);
+      } else if(beat==='detail'){
+        ctx.moveTo(-s*0.05, -bodyH*0.65);
+        ctx.lineTo(s*0.45, -bodyH*0.75);
+      } else {
+        ctx.moveTo(-s*0.35, -bodyH*0.35);
+        ctx.lineTo(s*0.35, -bodyH*0.35 + a*s*0.20);
+      }
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawProp(x,y,r,rng,shot){
+      ctx.save();
+      ctx.translate(x,y);
+      const wob = Math.sin(state.t*1.3 + 3)*0.18;
+      ctx.rotate(wob);
+
+      const c1 = 'rgba(0,255,179,0.22)';
+      const c2 = 'rgba(51,214,255,0.20)';
+
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = 'rgba(0,255,179,0.25)';
+
+      roundedRect(-r, -r, r*2, r*2, 10);
+      const g = ctx.createLinearGradient(-r,-r,r,r);
+      g.addColorStop(0, c1);
+      g.addColorStop(1, c2);
+      ctx.fillStyle = g;
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // inner circuit lines
+      ctx.globalAlpha = 0.75;
+      ctx.strokeStyle = 'rgba(255,255,255,0.20)';
+      ctx.lineWidth = 1.5;
+      for(let i=0;i<4;i++){
+        const t = (i+1)/5;
+        ctx.beginPath();
+        ctx.moveTo(-r*0.8, lerp(-r*0.6, r*0.6, t));
+        ctx.lineTo(r*0.8, lerp(-r*0.6, r*0.6, t));
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+
+      ctx.restore();
+    }
+
+    function drawMotifParticles({pad,W,H,horizon,rng,t,shot}){
+      const count = Math.floor(40 + 80*shot.score.motionComplexity);
+      const baseY = horizon - 80;
+      for(let i=0;i<count;i++){
+        const p = i / count;
+        const x = lerp(pad*1.2, W-pad*1.2, fract(p*7.13 + 0.11));
+        const y = baseY + Math.sin((p*14 + t*2)*Math.PI)*24 + (noise1D(rng, p*100 + t*2)-0.5)*32;
+        const r = 1 + 2.8*(0.2 + shot.score.motionComplexity) * (noise1D(rng, p*50 + 2)-0.2);
+        ctx.globalAlpha = 0.45 * (0.35 + 0.65*noise1D(rng, p*80 + 6));
+        ctx.fillStyle = i%3===0 ? 'rgba(255,79,216,0.35)' : i%3===1 ? 'rgba(51,214,255,0.35)' : 'rgba(0,255,179,0.32)';
+        ctx.beginPath();
+        ctx.arc(x, y, Math.max(0.5,r), 0, Math.PI*2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function mapColorNameToRGBA(name, a){
+      const n = (name||'').toLowerCase();
+      if(n.includes('indigo')) return `rgba(124,92,255,${a})`;
+      if(n.includes('cyan')) return `rgba(51,214,255,${a})`;
+      if(n.includes('magenta')) return `rgba(255,79,216,${a})`;
+      if(n.includes('mint')) return `rgba(0,255,179,${a})`;
+      if(n.includes('amber')) return `rgba(255,209,102,${a})`;
+      if(n.includes('crimson')) return `rgba(255,77,109,${a})`;
+      if(n.includes('green')) return `rgba(0,255,179,${a})`;
+      if(n.includes('violet')) return `rgba(124,92,255,${a})`;
+      return `rgba(51,214,255,${a})`;
+    }
+
+    function roundedRect(x,y,w,h,r){
+      const rr = Math.min(r, w/2, h/2);
+      ctx.beginPath();
+      ctx.moveTo(x+rr, y);
+      ctx.arcTo(x+w, y, x+w, y+h, rr);
+      ctx.arcTo(x+w, y+h, x, y+h, rr);
+      ctx.arcTo(x, y+h, x, y, rr);
+      ctx.arcTo(x, y, x+w, y, rr);
+      ctx.closePath();
+    }
+
+    function easeInOut(t){
+      return t<0.5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2;
+    }
+
+    function fract(x){
+      return x - Math.floor(x);
+    }
+
+    function noise1D(rng, x){
+      // deterministic value noise from a seedable rng by mixing x
+      const s = Math.floor(x);
+      const t = x - s;
+      const a = pseudoRand(s);
+      const b = pseudoRand(s+1);
+      return lerp(a,b, smoothstep(t));
+
+      function pseudoRand(k){
+        // hash k into 0..1
+        const n = (k * 9301 + 49297) % 233280;
+        return n / 233280;
+      }
+
+      function smoothstep(t){
+        return t*t*(3-2*t);
+      }
+    }
+
+    // -----------------------------
+    // UI: tabs, chips, timeline
+    // -----------------------------
+
+    function initChips(){
+      const row = $('#chipRow');
+      row.innerHTML = '';
+      FLAG_DEFS.forEach(def => {
+        const chip = document.createElement('div');
+        chip.className = 'chip' + (state.flags[def.key] ? ' on' : '');
+        chip.textContent = def.label;
+        chip.title = def.hint;
+        chip.tabIndex = 0;
+        chip.setAttribute('role','button');
+        chip.addEventListener('click', ()=>toggleFlag(def.key));
+        chip.addEventListener('keydown', (e)=>{
+          if(e.key==='Enter' || e.key===' '){ e.preventDefault(); toggleFlag(def.key); }
+        });
+        row.appendChild(chip);
+      });
+    }
+
+    function toggleFlag(k){
+      state.flags[k] = !state.flags[k];
+      initChips();
+      if(state.storyboard){
+        toast('Style updated', `${k} ${state.flags[k] ? 'enabled' : 'disabled'}. Regenerate to apply to prompts.`);
+      } else {
+        toast('Style updated', `${k} ${state.flags[k] ? 'enabled' : 'disabled'}.`);
+      }
+      updateKPIs();
+    }
+
+    function setTab(tab){
+      state.tab = tab;
+      $$('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===tab));
+      // main stage is always visible; swap below sections
+      $('#tab_timeline').style.display = (tab==='timeline') ? 'block' : 'none';
+      $('#tab_director').style.display = (tab==='director') ? 'block' : 'none';
+    }
+
+    $$('.tab').forEach(el=>{
+      el.addEventListener('click', ()=>setTab(el.dataset.tab));
+      el.addEventListener('keydown', (e)=>{
+        if(e.key==='Enter' || e.key===' '){ e.preventDefault(); setTab(el.dataset.tab); }
+      });
+    });
+
+    // -----------------------------
+    // UI: inputs
+    // -----------------------------
+
+    function bindInputs(){
+      const shots = $('#shots');
+      const pace = $('#pace');
+      const camera = $('#camera');
+      const surreal = $('#surreal');
+
+      function upd(){
+        state.prompt = $('#prompt').value;
+        state.genre = $('#genre').value;
+        state.mood = $('#mood').value;
+        state.shots = +shots.value;
+        state.pace = +pace.value / 100;
+        state.camera = +camera.value / 100;
+        state.surreal = +surreal.value / 100;
+
+        $('#shotsLabel').textContent = String(state.shots);
+        $('#paceLabel').textContent = fmt(state.pace,2);
+        $('#camLabel').textContent = fmt(state.camera,2);
+        $('#surLabel').textContent = fmt(state.surreal,2);
+
+        updateKPIs();
+      }
+
+      ['input','change'].forEach(ev=>{
+        shots.addEventListener(ev, upd);
+        pace.addEventListener(ev, upd);
+        camera.addEventListener(ev, upd);
+        surreal.addEventListener(ev, upd);
+        $('#genre').addEventListener(ev, upd);
+        $('#mood').addEventListener(ev, upd);
+        $('#prompt').addEventListener(ev, upd);
+      });
+
+      $('#prompt').addEventListener('keydown', (e)=>{
+        if((e.ctrlKey || e.metaKey) && e.key==='Enter'){
+          e.preventDefault();
+          generateStoryboard();
+        }
+      });
+
+      upd();
+    }
+
+    function updateKPIs(){
+      // heuristic KPIs based on knobs + flags
+      const cont = clamp(0.35 + state.surreal*0.55 - (state.flags.hardContinuity?0.18:0) - (state.flags.lockedHero?0.12:0) - (state.flags.oneLocation?0.10:0), 0, 1);
+      const motion = clamp(0.25 + state.camera*0.40 + state.pace*0.22 + state.surreal*0.10 + (state.flags.slowPushes?0.05:0), 0, 1);
+      const rhythm = state.pace < 0.33 ? 'Breathing' : state.pace < 0.66 ? 'Snappy' : 'Machine-gun';
+      const cost = (motion*0.6 + state.shots/16*0.4);
+
+      $('#kpiContinuity').textContent = cont < 0.35 ? 'Low' : cont < 0.65 ? 'Medium' : 'High';
+      $('#kpiContinuity').style.color = cont < 0.35 ? 'rgba(0,255,179,0.85)' : cont < 0.65 ? 'rgba(255,209,102,0.85)' : 'rgba(255,77,109,0.85)';
+
+      $('#kpiMotion').textContent = motion < 0.35 ? 'Low' : motion < 0.65 ? 'Medium' : 'High';
+      $('#kpiMotion').style.color = motion < 0.35 ? 'rgba(0,255,179,0.85)' : motion < 0.65 ? 'rgba(255,209,102,0.85)' : 'rgba(255,77,109,0.85)';
+
+      $('#kpiRhythm').textContent = rhythm;
+
+      $('#kpiCost').textContent = cost < 0.33 ? 'Low' : cost < 0.66 ? 'Moderate' : 'High';
+    }
+
+    // -----------------------------
+    // Storyboard actions
+    // -----------------------------
+
+    function generateStoryboard(){
+      const spec = {
+        prompt: state.prompt,
+        genre: state.genre,
+        mood: state.mood,
+        shots: state.shots,
+        pace: state.pace,
+        camera: state.camera,
+        surreal: state.surreal,
+        flags: {...state.flags},
+      };
+
+      state.storyboard = GEN.makeStoryboard(spec);
+      state.selectedShot = 0;
+      state.t = 0;
+      state.playing = true;
+
+      rebuildTimeline();
+      rebuildShotSelect();
+      hydrateEditor();
+      $('#directorNotes').innerHTML = state.storyboard.director;
+
+      toast('Storyboard generated', `${state.storyboard.shots.length} shots. Press Space to play/pause.`);
+    }
+
+    function rebuildShotSelect(){
+      const sel = $('#shotSelect');
+      sel.innerHTML = '';
+      if(!state.storyboard){
+        const opt = document.createElement('option');
+        opt.value = '0';
+        opt.textContent = 'No storyboard yet';
+        sel.appendChild(opt);
+        return;
+      }
+      state.storyboard.shots.forEach((s,i)=>{
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        opt.textContent = `${i+1}. ${s.title}`;
+        sel.appendChild(opt);
+      });
+      sel.value = String(state.selectedShot);
+    }
+
+    function rebuildTimeline(){
+      const area = $('#timeline');
+      area.innerHTML = '';
+      if(!state.storyboard){
+        area.innerHTML = `<div class="help">Generate a storyboard to populate the timeline.</div>`;
+        return;
+      }
+
+      state.storyboard.shots.forEach((s,i)=>{
+        const el = document.createElement('div');
+        el.className = 'shot';
+        el.innerHTML = `
+          <div class="shotTop">
+            <div class="t">${escapeHtml(i+1 + '. ' + s.title)}</div>
+            <div class="s">${escapeHtml(s.cam + ' • ' + s.dur + 's • ' + s.beat)}</div>
+          </div>
+          <div class="shotBody">
+            <div class="shotPrompt">${escapeHtml(s.prompt.split('\n')[2] || s.prompt.split('\n')[0] || '')}</div>
+            <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap">
+              <div class="miniBtns">
+                <button class="miniBtn" data-act="select" data-i="${i}">Edit</button>
+                <button class="miniBtn" data-act="jump" data-i="${i}">Preview</button>
+              </div>
+              <div style="font-size:12px; color: rgba(255,255,255,0.55)">continuity ${(s.score.continuityRisk*100)|0}% • motion ${(s.score.motionComplexity*100)|0}%</div>
+            </div>
+          </div>
+        `;
+        area.appendChild(el);
+      });
+
+      area.addEventListener('click', (e)=>{
+        const btn = e.target.closest('button');
+        if(!btn) return;
+        const act = btn.dataset.act;
+        const i = +btn.dataset.i;
+        if(act==='select'){
+          selectShot(i);
+          setTab('preview');
+          toast('Editing shot', `${i+1}. ${state.storyboard.shots[i].title}`);
+        }
+        if(act==='jump'){
+          selectShot(i);
+          setTab('preview');
+          state.t = 0;
+          state.playing = true;
+        }
+      }, {once:true});
+    }
+
+    function selectShot(i){
+      if(!state.storyboard) return;
+      state.selectedShot = clamp(i, 0, state.storyboard.shots.length-1);
+      $('#shotSelect').value = String(state.selectedShot);
+      hydrateEditor();
+    }
+
+    function moveShot(delta){
+      if(!state.storyboard) return;
+      const i = state.selectedShot;
+      const j = clamp(i+delta, 0, state.storyboard.shots.length-1);
+      if(i===j) return;
+      const shots = state.storyboard.shots;
+      const tmp = shots[i];
+      shots[i] = shots[j];
+      shots[j] = tmp;
+      state.selectedShot = j;
+      // fix idx
+      shots.forEach((s,k)=>s.idx=k);
+      rebuildTimeline();
+      rebuildShotSelect();
+      hydrateEditor();
+      toast('Reordered', `Moved shot to position ${j+1}.`);
+    }
+
+    function duplicateShot(){
+      if(!state.storyboard) return;
+      const shots = state.storyboard.shots;
+      const i = state.selectedShot;
+      const original = shots[i];
+      const copy = JSON.parse(JSON.stringify(original));
+      copy.id = uid();
+      copy.title = original.title + ' (copy)';
+      shots.splice(i+1, 0, copy);
+      shots.forEach((s,k)=>s.idx=k);
+      state.selectedShot = i+1;
+      rebuildTimeline();
+      rebuildShotSelect();
+      hydrateEditor();
+      toast('Duplicated', `Inserted copy at ${state.selectedShot+1}.`);
+    }
+
+    function deleteShot(){
+      if(!state.storyboard) return;
+      const shots = state.storyboard.shots;
+      if(shots.length<=1){
+        toast('Cannot delete', 'Need at least one shot.');
+        return;
+      }
+      const i = state.selectedShot;
+      shots.splice(i,1);
+      shots.forEach((s,k)=>s.idx=k);
+      state.selectedShot = clamp(i, 0, shots.length-1);
+      rebuildTimeline();
+      rebuildShotSelect();
+      hydrateEditor();
+      toast('Deleted', `Shot removed. ${shots.length} shots remaining.`);
+    }
+
+    // -----------------------------
+    // Shot editor
+    // -----------------------------
+
+    function hydrateEditor(){
+      if(!state.storyboard) {
+        $('#editTitle').value = '';
+        $('#editPrompt').value = '';
+        $('#editDur').value = 6;
+        $('#editCam').value = 'static';
+        $('#editHint').textContent = 'click any shot';
+        return;
+      }
+      const s = state.storyboard.shots[state.selectedShot];
+      $('#editTitle').value = s.title;
+      $('#editPrompt').value = s.prompt;
+      $('#editDur').value = s.dur;
+      $('#editCam').value = s.cam;
+      $('#editHint').textContent = `editing ${state.selectedShot+1}/${state.storyboard.shots.length}`;
+    }
+
+    function applyEditor(){
+      if(!state.storyboard) return;
+      const s = state.storyboard.shots[state.selectedShot];
+      s.title = normalizeSpaces($('#editTitle').value || s.title);
+      s.prompt = $('#editPrompt').value || s.prompt;
+      s.dur = clamp(+$('#editDur').value || s.dur, 1, 20);
+      s.cam = $('#editCam').value || s.cam;
+      // update scores lightly
+      s.score.continuityRisk = scoreContinuityRisk(s.prompt, state.flags, state.surreal);
+      s.score.motionComplexity = scoreMotion(s.cam, s.beat, state.camera, state.surreal);
+
+      rebuildTimeline();
+      rebuildShotSelect();
+      toast('Applied', `Updated shot ${state.selectedShot+1}.`);
+    }
+
+    function autoPolish(){
+      if(!state.storyboard) return;
+      const s = state.storyboard.shots[state.selectedShot];
+      const lines = s.prompt.split('\n').map(l=>l.trim()).filter(Boolean);
+
+      // Extract some fields if present
+      const core = lines.find(l=>l.toLowerCase().startsWith('core:')) || `Core: ${normalizeSpaces(state.prompt || 'A cinematic scene.')}`;
+      const subj = lines.find(l=>l.toLowerCase().startsWith('subject:')) || `Subject: ${state.storyboard.hero}.`;
+      const cam = `Camera: ${s.cam}.`;
+      const dur = `Duration: ${s.dur}s.`;
+
+      const constraints = [];
+      if(state.flags.textless) constraints.push('no visible text');
+      if(state.flags.physicsCoherent) constraints.push('coherent physics');
+      if(state.flags.lockedHero) constraints.push('same hero identity across shots');
+      if(state.flags.oneLocation) constraints.push('consistent location');
+      if(state.flags.matchCuts) constraints.push('match cut-friendly motion');
+
+      const beatLine = lines.find(l=>l.toLowerCase().includes('establish') || l.toLowerCase().includes('reveal') || l.toLowerCase().includes('resolution') || l.toLowerCase().includes('close detail'))
+        || (lines[2] || 'A cinematic beat with clear action.');
+
+      const lighting = lines.find(l=>l.toLowerCase().startsWith('lighting:')) || `Lighting: motivated practical light.`;
+      const style = lines.find(l=>l.toLowerCase().startsWith('style:')) || `Style: ${state.mood}, ${state.genre}.`;
+
+      const polished = [
+        core,
+        subj,
+        normalizeSpaces(beatLine),
+        cam,
+        lighting,
+        style,
+        constraints.length ? `Constraints: ${constraints.join(', ')}.` : null,
+        dur,
+      ].filter(Boolean).join('\n');
+
+      $('#editPrompt').value = polished;
+      toast('Auto-polish', 'Rewrote shot prompt into a tighter structure.');
+    }
+
+    // -----------------------------
+    // Share & Export
+    // -----------------------------
+
+    function exportJSON(){
+      const payload = {
+        app: 'Sora Farewell Studio',
+        trend: {title: state.trendTitle, source: state.trendSource},
+        savedAt: new Date().toISOString(),
+        storyboard: state.storyboard,
+      };
+      download('storyboard.json', JSON.stringify(payload, null, 2));
+      toast('Exported', 'Downloaded storyboard.json');
+    }
+
+    function encodeShare(){
+      const payload = {
+        v:1,
+        spec: {
+          prompt: state.prompt,
+          genre: state.genre,
+          mood: state.mood,
+          shots: state.shots,
+          pace: state.pace,
+          camera: state.camera,
+          surreal: state.surreal,
+          flags: state.flags,
+        },
+        storyboard: state.storyboard,
+        selectedShot: state.selectedShot,
+      };
+
+      const json = JSON.stringify(payload);
+      const enc = btoa(unescape(encodeURIComponent(json)));
+      return enc;
+    }
+
+    function decodeShare(hash){
+      try{
+        const enc = hash.replace(/^#/, '');
+        const json = decodeURIComponent(escape(atob(enc)));
+        return JSON.parse(json);
+      }catch(e){
+        return null;
+      }
+    }
+
+    async function shareLink(){
+      const enc = encodeShare();
+      const url = location.origin + location.pathname + '#' + enc;
+      const ok = await copyToClipboard(url);
+      if(ok) toast('Share link copied', 'URL copied to clipboard.');
+      else toast('Share link ready', 'Could not auto-copy. Manually copy the URL.');
+      // update hash
+      location.hash = enc;
+    }
+
+    function loadFromHash(){
+      if(!location.hash || location.hash.length < 10) return false;
+      const data = decodeShare(location.hash);
+      if(!data) return false;
+
+      // hydrate
+      const spec = data.spec || {};
+      $('#prompt').value = spec.prompt || '';
+      $('#genre').value = spec.genre || 'sci-fi';
+      $('#mood').value = spec.mood || 'melancholy';
+      $('#shots').value = String(spec.shots || 8);
+      $('#pace').value = String(Math.round((spec.pace||0.55)*100));
+      $('#camera').value = String(Math.round((spec.camera||0.45)*100));
+      $('#surreal').value = String(Math.round((spec.surreal||0.25)*100));
+
+      state.flags = {...state.flags, ...(spec.flags||{})};
+      initChips();
+
+      // refresh state from inputs
+      state.prompt = $('#prompt').value;
+      state.genre = $('#genre').value;
+      state.mood = $('#mood').value;
+      state.shots = +$('#shots').value;
+      state.pace = +$('#pace').value/100;
+      state.camera = +$('#camera').value/100;
+      state.surreal = +$('#surreal').value/100;
+
+      // storyboard
+      state.storyboard = data.storyboard || null;
+      state.selectedShot = data.selectedShot || 0;
+      state.t = 0;
+      state.playing = true;
+
+      $('#directorNotes').innerHTML = state.storyboard ? state.storyboard.director : '';
+      rebuildTimeline();
+      rebuildShotSelect();
+      hydrateEditor();
+      updateKPIs();
+
+      toast('Loaded share link', 'Storyboard restored from URL.');
+      return true;
+    }
+
+    // -----------------------------
+    // Playback loop
+    // -----------------------------
+
+    function tick(ts){
+      // use fixed step for determinism
+      if(state.playing && state.storyboard){
+        const dt = 1/60;
+        state.t += dt * state.speed;
+      }
+      render();
+      requestAnimationFrame(tick);
+    }
+
+    function play(){
+      if(!state.storyboard){ toast('Nothing to play', 'Generate a storyboard first.'); return; }
+      state.playing = true;
+    }
+
+    function pause(){
+      state.playing = false;
+    }
+
+    function step(){
+      if(!state.storyboard){ toast('Nothing to step', 'Generate a storyboard first.'); return; }
+      state.t += 0.35 * state.speed;
+    }
+
+    // -----------------------------
+    // Bind buttons
+    // -----------------------------
+
+    function bindButtons(){
+      $('#btnGenerate').addEventListener('click', generateStoryboard);
+
+      $('#btnRemix').addEventListener('click', ()=>{
+        // randomize knobs within pleasant ranges
+        const r = mulberry32(Date.now()>>>0);
+        $('#pace').value = String(Math.floor(lerp(35, 80, r())));
+        $('#camera').value = String(Math.floor(lerp(20, 90, r())));
+        $('#surreal').value = String(Math.floor(lerp(5, 55, r())));
+        // flip a couple flags
+        const keys = FLAG_DEFS.map(d=>d.key);
+        for(let i=0;i<2;i++){
+          const k = choice(r, keys);
+          state.flags[k] = !state.flags[k];
+        }
+        initChips();
+        // trigger update
+        const ev = new Event('input');
+        $('#pace').dispatchEvent(ev);
+        toast('Remixed', 'Style knobs randomized.');
+      });
+
+      $('#btnReset').addEventListener('click', ()=>{
+        $('#prompt').value = '';
+        $('#genre').value = 'sci-fi';
+        $('#mood').value = 'melancholy';
+        $('#shots').value = '8';
+        $('#pace').value = '55';
+        $('#camera').value = '45';
+        $('#surreal').value = '25';
+        // reset flags
+        state.flags = {
+          hardContinuity:false,
+          lockedHero:false,
+          practicalLighting:true,
+          textless:true,
+          cinematicLens:true,
+          slowPushes:false,
+          matchCuts:true,
+          oneLocation:false,
+          diegeticSound:true,
+          colorScript:true,
+          physicsCoherent:true,
+        };
+        initChips();
+        state.storyboard = null;
+        state.selectedShot = 0;
+        state.t = 0;
+        state.playing = false;
+        rebuildTimeline();
+        rebuildShotSelect();
+        hydrateEditor();
+        updateKPIs();
+        toast('Reset', 'Cleared everything.');
+      });
+
+      $('#btnPlay').addEventListener('click', play);
+      $('#btnPause').addEventListener('click', pause);
+      $('#btnStep').addEventListener('click', step);
+
+      $('#speed').addEventListener('input', (e)=>{
+        const v = +e.target.value;
+        state.speed = v/100;
+        $('#speedLabel').textContent = fmt(state.speed,2);
+      });
+
+      $('#shotSelect').addEventListener('change', (e)=>{
+        selectShot(+e.target.value);
+        state.t = 0;
+      });
+
+      $('#btnMoveUp').addEventListener('click', ()=>moveShot(-1));
+      $('#btnMoveDown').addEventListener('click', ()=>moveShot(1));
+      $('#btnDuplicate').addEventListener('click', duplicateShot);
+      $('#btnDelete').addEventListener('click', deleteShot);
+
+      $('#btnApply').addEventListener('click', applyEditor);
+      $('#btnAutoPolish').addEventListener('click', autoPolish);
+
+      $('#btnExport').addEventListener('click', exportJSON);
+      $('#btnShare').addEventListener('click', shareLink);
+
+      $('#btnLoadDemo').addEventListener('click', ()=>{
+        loadDemo();
+        toast('Demo loaded', 'Try generating, then editing a shot.');
+      });
+    }
+
+    function loadDemo(){
+      const demo = {
+        prompt: 'A filmmaker loses access to a legendary video model overnight and decides to rebuild the craft: storyboards, camera plans, and constraints.',
+        genre: 'documentary',
+        mood: 'hopeful',
+        shots: 9,
+        pace: 0.56,
+        camera: 0.52,
+        surreal: 0.18,
+        flags: {
+          hardContinuity:true,
+          lockedHero:true,
+          practicalLighting:true,
+          textless:true,
+          cinematicLens:true,
+          slowPushes:true,
+          matchCuts:true,
+          oneLocation:false,
+          diegeticSound:true,
+          colorScript:true,
+          physicsCoherent:true,
+        }
+      };
+
+      $('#prompt').value = demo.prompt;
+      $('#genre').value = demo.genre;
+      $('#mood').value = demo.mood;
+      $('#shots').value = String(demo.shots);
+      $('#pace').value = String(Math.round(demo.pace*100));
+      $('#camera').value = String(Math.round(demo.camera*100));
+      $('#surreal').value = String(Math.round(demo.surreal*100));
+
+      state.flags = {...state.flags, ...demo.flags};
+      initChips();
+
+      // update derived state
+      const ev = new Event('input');
+      $('#prompt').dispatchEvent(ev);
+      generateStoryboard();
+    }
+
+    // -----------------------------
+    // Keyboard shortcuts
+    // -----------------------------
+
+    window.addEventListener('keydown', (e)=>{
+      if((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==='s'){
+        e.preventDefault();
+        shareLink();
+        return;
+      }
+      if(e.key===' '){
+        // do not trigger when editing input
+        const tag = (document.activeElement && document.activeElement.tagName || '').toLowerCase();
+        if(['textarea','input','select'].includes(tag)) return;
+        e.preventDefault();
+        state.playing = !state.playing;
+        toast(state.playing ? 'Play' : 'Pause', state.playing ? 'Preview running.' : 'Preview paused.');
+      }
+      if(e.key.toLowerCase()==='j'){
+        step();
+      }
+      if(e.key.toLowerCase()==='k'){
+        // reverse step a little
+        if(state.storyboard){
+          state.t = Math.max(0, state.t - 0.35*state.speed);
+        }
+      }
+      if(e.key==='ArrowUp'){
+        if(e.altKey){ moveShot(-1); }
+      }
+      if(e.key==='ArrowDown'){
+        if(e.altKey){ moveShot(1); }
+      }
+    });
+
+    // -----------------------------
+    // Boot
+    // -----------------------------
+
+    function boot(){
+      initChips();
+      bindInputs();
+      bindButtons();
+
+      // timeline placeholder
+      rebuildTimeline();
+      rebuildShotSelect();
+      hydrateEditor();
+      updateKPIs();
+
+      // try to load share link
+      const loaded = loadFromHash();
+      if(!loaded){
+        // gentle default text
+        $('#prompt').value = 'A lonely robot walks through a rain-soaked neon market, searching for a signal that reminds it of home.';
+        state.prompt = $('#prompt').value;
+      }
+
+      requestAnimationFrame(tick);
+    }
+
+    boot();
+
+  })();
+  </script>
+</body>
+</html>
